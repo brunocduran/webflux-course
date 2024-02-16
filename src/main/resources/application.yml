@@ -1,7 +1,7 @@
 spring:
   data:
     mongodb:
-      uri: mongodb+srv://${BD_USER:admin}:${BD_PASSWORD:6cgQ7K5y8JAT3nbh}@cluster0.82ztiwc.mongodb.net/{DB_NAME:webflux-course}?retryWrites=true&w=majority
-      auto_index-creation: true
+      uri: mongodb+srv://${BD_USER:brunocesarduran}:${BD_PASSWORD:passadmin}@cluster0.82ztiwc.mongodb.net/${DB_NAME:webflux-course}?retryWrites=true&w=majority
+      auto-index-creation: true
   application:
     name: webflux-course
