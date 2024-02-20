@@ -100,6 +100,9 @@ class UserControllerImplTest {
                 .jsonPath("$.name").isEqualTo(NAME)
                 .jsonPath("$.email").isEqualTo(EMAIL)
                 .jsonPath("$.password").isEqualTo(PASSWORD);
+
+        verify(service).findById(anyString());
+        verify(mapper).toResponse(any(User.class));
     }
 
     @Test
@@ -125,7 +128,28 @@ class UserControllerImplTest {
     }
 
     @Test
-    void update() {
+    @DisplayName("Test update endpoint with success")
+    void testUpdateWithSuccess() {
+        final var request = new UserRequest(NAME, EMAIL, PASSWORD);
+        final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
+
+        when(service.update(anyString(), any(UserRequest.class))).thenReturn(just(User.builder().build()));
+        when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
+
+        webTestClient.patch().uri(BASE_URI + "/" + ID)
+                .contentType(APPLICATION_JSON)
+                .body(fromValue(request))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(ID)
+                .jsonPath("$.name").isEqualTo(NAME)
+                .jsonPath("$.email").isEqualTo(EMAIL)
+                .jsonPath("$.password").isEqualTo(PASSWORD);
+
+        verify(service).update(anyString(), any(UserRequest.class));
+        verify(mapper).toResponse(any(User.class));
+
     }
 
     @Test
