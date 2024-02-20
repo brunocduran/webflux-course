@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +34,7 @@ class UserControllerImplTest {
     public static final String NAME = "Bruno";
     public static final String EMAIL = "bruno@gmail.com";
     public static final String PASSWORD = "123";
+    public static final String BASE_URI = "/users";
 
     @Autowired
     private WebTestClient webTestClient;
@@ -53,7 +55,7 @@ class UserControllerImplTest {
 
         when(service.save(any(UserRequest.class))).thenReturn(just(User.builder().build()));
 
-        webTestClient.post().uri("/users")
+        webTestClient.post().uri(BASE_URI)
                 .contentType(APPLICATION_JSON)
                 .body(fromValue(request))
                 .exchange()
@@ -67,13 +69,13 @@ class UserControllerImplTest {
     void testSaveWithBadRequest() {
         final var request = new UserRequest(" " + NAME, EMAIL, PASSWORD);
 
-        webTestClient.post().uri("/users")
+        webTestClient.post().uri(BASE_URI)
                 .contentType(APPLICATION_JSON)
                 .body(fromValue(request))
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.path").isEqualTo("/users")
+                .jsonPath("$.path").isEqualTo(BASE_URI)
                 .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
                 .jsonPath("$.error").isEqualTo("Validation error")
                 .jsonPath("$.message").isEqualTo("Error on validation attributes")
@@ -89,7 +91,7 @@ class UserControllerImplTest {
         when(service.findById(anyString())).thenReturn(Mono.just(User.builder().build()));
         when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
 
-        webTestClient.get().uri("/users/" + ID)
+        webTestClient.get().uri(BASE_URI + "/" + ID)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -101,7 +103,25 @@ class UserControllerImplTest {
     }
 
     @Test
-    void findAll() {
+    @DisplayName("Test find all endpoint with success")
+    void testFindAllWithSuccess() {
+        final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
+
+        when(service.findAll()).thenReturn(Flux.just(User.builder().build()));
+        when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
+
+        webTestClient.get().uri(BASE_URI)
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.[0].id").isEqualTo(ID)
+                .jsonPath("$.[0].name").isEqualTo(NAME)
+                .jsonPath("$.[0].email").isEqualTo(EMAIL)
+                .jsonPath("$.[0].password").isEqualTo(PASSWORD);
+
+        verify(service).findAll();
+        verify(mapper).toResponse(any(User.class));
     }
 
     @Test
